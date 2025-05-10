@@ -1,5 +1,7 @@
-module github.com/AkihiroSuda/go-netfilter-queue
+module github.com/bullfrogsec/go-netfilter-queue
 
-go 1.15
+go 1.22.0
 
-require github.com/google/gopacket v1.1.19
+toolchain go1.22.7
+
+require github.com/gopacket/gopacket v1.3.1

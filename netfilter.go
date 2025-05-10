@@ -38,32 +38,31 @@ import (
 	"time"
 	"unsafe"
 
-	"github.com/google/gopacket"
-	"github.com/google/gopacket/layers"
+	"github.com/gopacket/gopacket"
+	"github.com/gopacket/gopacket/layers"
 )
 
-//Verdict for a packet
+// Verdict for a packet
 type Verdict C.uint
 
 type NFPacket struct {
 	Packet gopacket.Packet
-	Mark uint32
+	Mark   uint32
 	qh     *C.struct_nfq_q_handle
 	id     C.uint32_t
 }
 
-//Set the verdict for the packet
+// Set the verdict for the packet
 func (p *NFPacket) SetVerdict(v Verdict) {
 	C.nfq_set_verdict(p.qh, p.id, C.uint(v), 0, nil)
 }
 
-//Set the verdict for the packet with a mark
+// Set the verdict for the packet with a mark
 func (p *NFPacket) SetVerdictMark(v Verdict, mark uint32) {
 	C.nfq_set_verdict2(p.qh, p.id, C.uint(v), C.uint32_t(mark), 0, nil)
 }
 
-
-//Set the verdict for the packet (in the case of requeue)
+// Set the verdict for the packet (in the case of requeue)
 func (p *NFPacket) SetRequeueVerdict(newQueueId uint16) {
 	v := uint(NF_QUEUE)
 	q := (uint(newQueueId) << 16)
@@ -71,7 +70,7 @@ func (p *NFPacket) SetRequeueVerdict(newQueueId uint16) {
 	C.nfq_set_verdict(p.qh, p.id, C.uint(v), 0, nil)
 }
 
-//Set the verdict for the packet AND provide new packet content for injection
+// Set the verdict for the packet AND provide new packet content for injection
 func (p *NFPacket) SetVerdictWithPacket(v Verdict, packet []byte) {
 	C.nfq_set_verdict(
 		p.qh,
@@ -109,7 +108,7 @@ const (
 var theTable = make(map[uint32]*chan NFPacket, 0)
 var theTabeLock sync.RWMutex
 
-//Create and bind to queue specified by queueId
+// Create and bind to queue specified by queueId
 func NewNFQueue(queueId uint16, maxPacketsInQueue uint32, packetSize uint32) (*NFQueue, error) {
 	var nfq = NFQueue{}
 	var err error
@@ -168,7 +167,7 @@ func NewNFQueue(queueId uint16, maxPacketsInQueue uint32, packetSize uint32) (*N
 	return &nfq, nil
 }
 
-//Unbind and close the queue
+// Unbind and close the queue
 func (nfq *NFQueue) Close() {
 	C.nfq_destroy_queue(nfq.qh)
 	C.nfq_close(nfq.h)
@@ -178,7 +177,7 @@ func (nfq *NFQueue) Close() {
 	theTabeLock.Unlock()
 }
 
-//Get the channel for packets
+// Get the channel for packets
 func (nfq *NFQueue) GetPackets() <-chan NFPacket {
 	return nfq.packets
 }
@@ -204,7 +203,7 @@ func go_callback(packetId C.uint32_t, data *C.uchar, length C.int, mark C.uint32
 		Packet: packet,
 		qh:     qh,
 		id:     packetId,
-		Mark: uint32(mark),
+		Mark:   uint32(mark),
 	}
 
 	theTabeLock.RLock()
